@@ -103,3 +103,81 @@ This decision is supported by:
 - Improved interpretability and calibration stability  
 
 The distance-only logistic regression model provides a clean, robust estimate of field goal make probability while avoiding overfitting and unnecessary noise from less predictive features.
+
+## Reinforcement Learning Model Evaluation
+
+The reinforcement learning component of this project trains a **Deep Q-Network (DQN)** agent inside a fully custom field-goal simulation environment. The environment models realistic physics and incorporates environmental difficulty factors including:
+
+- **Distance**
+- **Headwind and Crosswind**
+- **Temperature**
+- **Kicker Pressure**
+- **Slip / Ground Stability**
+- **Hashmark Alignment**
+
+All noise models, aerodynamic effects, and plant-foot variability were hand-designed to ensure that the agent must learn to generalize across *realistic*, multi-factor difficulty conditions.
+
+---
+
+## **Training Performance**
+
+We trained the agent for **60,000 episodes**, evaluating metrics every 1,000 episodes.  
+Below are the corresponding training curves.
+
+### **Success Rate per 1,000-Episode Chunk**  
+![Training: Success Rate](plots/output_6_1.png)
+
+**Interpretation:**
+
+- The agent begins around **10–12% success** (nearly random).
+- Success rate climbs *rapidly* through exploration, reaching:
+  - **40–50%** by ~8,000 episodes
+  - **70%+** by ~20,000 episodes
+  - **Stable 82–85%** for the final 15,000 episodes  
+- This is clear evidence of **policy convergence** — the agent learns to reliably compensate for wind, distance, and stochastic kick execution.
+
+---
+
+### **Average Reward per 1,000-Episode Chunk**  
+![Training: Average Reward](plots/output_6_2.png)
+
+**Interpretation:**
+
+- Early-reward values around **–210** indicate repeated short kicks, inaccurate angles, or complete misses.
+- As training progresses, the agent:
+  - Reduces short kicks (less –3 per yard short penalty)
+  - Reduces deep overshoots (less –1 per yard long)
+  - Becomes more centered (less –3 per yard off-target)
+- Final rewards stabilize around **+15 to +25**, consistent with a skilled kicker who reliably clears the uprights with minimal over-kicking.
+
+Taken together, these two curves strongly validate that the DQN agent successfully learned a robust kicking strategy.
+
+---
+
+## **Final Policy Performance**
+
+Evaluated over **1,000 test-time episodes** with *no exploration noise*:
+
+- **Success rate:** **86.30%**
+- **Average reward:** **+20.68**
+
+The agent demonstrates high reliability despite physics randomness and variable difficulty.  
+
+These numbers place the agent in a performance band comparable to a competent human kicker under varied conditions.
+
+---
+
+## **Environmental Factor Influence**
+
+To understand how environmental variables affect success probability in the learned policy, a logistic regression was fit on evaluation outcomes.  
+Its absolute coefficients provide a measure of *relative importance*:
+
+### **Feature Importance (Effect on Make Probability)**  
+![Feature Importance](plots/output_6_3.png)
+
+**Interpretation:**
+
+1. **Distance** — the largest negative impact, dominating all other factors.  
+2. **Headwind** — significantly reduces effective range; strong winds require higher velocity and angle.  
+3. **Temperature** — strong effect: cold footballs compress less and travel shorter distances; model compensates poorly in extreme cold.  
+4. **Crosswind** — meaningful, though less consistent than headwind; strong rightward winds create more model
