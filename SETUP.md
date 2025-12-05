@@ -50,18 +50,5 @@ Run cells top-to-bottom to:
 
 ## 7. Running Supervised Learning Code
 
-`python data.py
-python model.py`
-
-## 8. Verify Installation
-
-If the following runs without errors, setup is complete.
-
-`import numpy
-import pandas
-import matplotlib
-import sklearn
-import torch
-import gymnasium as gym`
-
-`print("All libraries imported successfully.")`
+`python data.py`
+`python model.py`
