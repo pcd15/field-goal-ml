@@ -123,7 +123,6 @@ We trained the agent for **60,000 episodes**, evaluating metrics every 1,000 epi
 Below are the corresponding training curves.
 
 ### **Success Rate per 1,000-Episode Chunk**  
-![Training: Success Rate](plots/output_6_1.png)
 
 **Interpretation:**
 
@@ -137,7 +136,6 @@ Below are the corresponding training curves.
 ---
 
 ### **Average Reward per 1,000-Episode Chunk**  
-![Training: Average Reward](plots/output_6_2.png)
 
 **Interpretation:**
 
@@ -149,6 +147,10 @@ Below are the corresponding training curves.
 - Final rewards stabilize around **+15 to +25**, consistent with a skilled kicker who reliably clears the uprights with minimal over-kicking.
 
 Taken together, these two curves strongly validate that the DQN agent successfully learned a robust kicking strategy.
+
+---
+
+![Training: Success Rate](plots/output_6_1.png)
 
 ---
 
