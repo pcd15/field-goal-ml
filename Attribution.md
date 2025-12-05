@@ -16,6 +16,13 @@ Contributions:
 - Wrote structural project organization and final analysis included in project deliverables
 - Verified correctness of AI-generated text and incorporated or modified it as needed
 
+### Code Components Fully Written by the Human Author
+- The custom Gymnasium environment (`FieldGoalEnv`) including physics calculations, kick trajectory simulation, wind modeling, temperature scaling, slip coefficient mechanics, reward shaping logic, and termination conditions
+- The complete DQN training loop and agent logic (`FieldGoalAgent`, replay buffer, epsilon decay, target network updates)
+- The supervised learning model implementation, feature engineering, and data preprocessing pipeline (`data.py`, `model.py`)
+- All experimental configuration decisions and hyperparameter choices
+- All evaluation protocol design and integration into the notebook workflows
+
 ---
 
 ## AI-Assisted Contributions
@@ -32,13 +39,6 @@ This project used AI (ChatGPT by OpenAI) as a writing and coding assistant. The 
 - Helper functions for saving plots and formatting output
 - Some boilerplate sections for initializing GPU devices and utility print statements
 - Internal text descriptions for the supervised and reinforcement learning methodology
-
-### Code Components Fully Written by the Human Author
-- The custom Gymnasium environment (`FieldGoalEnv`) including physics calculations, kick trajectory simulation, wind modeling, temperature scaling, slip coefficient mechanics, reward shaping logic, and termination conditions
-- The complete DQN training loop and agent logic (`FieldGoalAgent`, replay buffer, epsilon decay, target network updates)
-- The supervised learning model implementation, feature engineering, and data preprocessing pipeline (`data.py`, `model.py`)
-- All experimental configuration decisions and hyperparameter choices
-- All evaluation protocol design and integration into the notebook workflows
 
 ---
 
@@ -74,4 +74,3 @@ AI tools were used as a utility for:
 - Formatting assistance
 
 All core logic, modeling decisions, environment engineering, and machine learning implementation were created by **Paul Dilly** and constitute the primary intellectual contribution of the project.
-
