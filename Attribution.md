@@ -26,7 +26,6 @@ This project used AI (ChatGPT by OpenAI) as a writing and coding assistant. The 
 - `SETUP.md`  
 - `README.md`  
 - `ATTRIBUTION.md`  
-- Portions of explanatory text used in the project report (final_handout.html)
 
 ### Code Components Partially Generated or Assisted by AI
 - Plotting and visualization functions used in the reinforcement learning evaluation workflow
