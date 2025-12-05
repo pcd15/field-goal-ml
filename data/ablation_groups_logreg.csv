@@ -1,0 +1,6 @@
+group_removed,features_removed,auc_full,auc_after_removal,delta_auc
+no_distance,kick_distance,0.7509954841887616,0.5467902148574417,0.20420526933131988
+distance_only,"half_seconds_remaining, score_differential, temp_f, humidity_pct, wind_speed_mph, roof, surface, wind_dir, weather_type",0.7509954841887616,0.743548279262565,0.00744720492619666
+no_stadium,"roof, surface",0.7509954841887616,0.7450068479480244,0.0059886362407372
+no_pressure,"half_seconds_remaining, score_differential",0.7509954841887616,0.7507456299473106,0.00024985424145096413
+no_weather,"wind_speed_mph, wind_dir, humidity_pct, weather_type, temp_f",0.7509954841887616,0.7514219446992556,-0.0004264605104939978
