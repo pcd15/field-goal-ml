@@ -3,6 +3,9 @@ pandas
 matplotlib
 scikit-learn
 torch
-gymnasium[box2d]
+gymnasium
 jupyterlab
 ipykernel
+nflreadpy
+polars
+pyarrow

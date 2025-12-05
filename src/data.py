@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import re
 
-
 def load_data():
     all_years = list(range(1999, 2025))
 

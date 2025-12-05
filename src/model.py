@@ -11,8 +11,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 
-import statsmodels.api as sm
-
 
 def load_model_data(path: str = "../data/fg_data.csv"):
     df = pd.read_csv(path)
