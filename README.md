@@ -15,8 +15,6 @@ See SETUP.md for steps on how to get set up and run all the code.
 
 ## Evaluation
 
-## Evaluation
-
 ### Supervised Learning Model Evaluation
 
 The predictive component of this project explored multiple supervised learning approaches for estimating the kicker-agnostic probability that a field goal will be made. Two model families were initially tested: **Logistic Regression** and **Gradient Boosted Trees (GBT)**. While GBTs can model complex nonlinear relationships, early experiments showed minimal improvement in held-out AUC relative to logistic regression while substantially increasing model complexity and reducing interpretability. Because the goal of this component is both predictive accuracy and interpretable probability outputs, **Logistic Regression was selected as the primary modeling approach.**
