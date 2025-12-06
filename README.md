@@ -224,7 +224,6 @@ We trained a Deep Q-Network (DQN) for **60,000 episodes**, logging:
 - Average reward per 1,000-episode chunk  
 
 #### Success Rate Over Time  
-*(see `plots/output_6_1.png`)*
 
 - Starts at **≈10–12%** (nearly random behavior).
 - Climbs to **40–50%** by ~8,000 episodes.
@@ -248,6 +247,8 @@ This is clear evidence of **policy convergence**: the agent progressively learns
   - Makes most kicks
   - Rarely over/under-kicks by much
   - Hits relatively close to center
+
+![Success Rate and Average Reward Throughout Training](plots/output_6_1.png)
 
 Together, these training curves show that the DQN successfully **optimizes its kicking policy** in a complex, noisy environment.
 
