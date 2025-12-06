@@ -1,4 +1,4 @@
-# NFL, Here We Come: Using Machine Learning to Predict and Optimize Field-Goal Success
+# NFL, Here We Come: Using Machine Learning to Predict and Optimize Field-Goal Success Rates
 
 ## 1. What It Does
 
