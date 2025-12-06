@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
@@ -13,6 +12,7 @@ from sklearn.impute import SimpleImputer
 
 
 def load_model_data(path: str = "../data/fg_data.csv"):
+    print(f"[load_model_data] Loading data from {path} ...")
     df = pd.read_csv(path)
 
     y = df["fg_made"]
@@ -25,7 +25,6 @@ def load_model_data(path: str = "../data/fg_data.csv"):
         "humidity_pct",
         "wind_speed_mph",
     ]
-
     categorical_features = [
         "roof",
         "surface",
@@ -34,7 +33,7 @@ def load_model_data(path: str = "../data/fg_data.csv"):
     ]
 
     X = df[numeric_features + categorical_features]
-
+    print(f"[load_model_data] Target distribution: made={y.sum():,}, missed/blocked={(len(y) - y.sum()):,}")
     return X, y, numeric_features, categorical_features
 
 
@@ -45,21 +44,18 @@ def build_logreg_preprocessor(numeric_features, categorical_features):
             ("scaler", StandardScaler()),
         ]
     )
-
     logreg_categorical_transformer = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="most_frequent")),
             ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
         ]
     )
-
     logreg_preprocessor = ColumnTransformer(
         transformers=[
             ("num", logreg_numeric_transformer, numeric_features),
             ("cat", logreg_categorical_transformer, categorical_features),
         ]
     )
-
     return logreg_preprocessor
 
 
@@ -69,21 +65,18 @@ def build_tree_preprocessor(numeric_features, categorical_features):
             ("imputer", SimpleImputer(strategy="median")),
         ]
     )
-
     tree_categorical_transformer = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="most_frequent")),
             ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
         ]
     )
-
     tree_preprocessor = ColumnTransformer(
         transformers=[
             ("num", tree_numeric_transformer, numeric_features),
             ("cat", tree_categorical_transformer, categorical_features),
         ]
     )
-
     return tree_preprocessor
 
 
@@ -168,10 +161,8 @@ def compute_logreg_auc(
 ) -> float:
     features = numeric_features + categorical_features
     X_sub = X[features]
-
     preprocessor = build_logreg_preprocessor(numeric_features, categorical_features)
     clf = make_logreg_pipeline(preprocessor)
-
     X_train, X_test, y_train, y_test = train_test_split(
         X_sub,
         y,
@@ -179,7 +170,6 @@ def compute_logreg_auc(
         random_state=random_state,
         stratify=y,
     )
-
     clf.fit(X_train, y_train)
     preds = clf.predict_proba(X_test)[:, 1]
     auc = roc_auc_score(y_test, preds)
@@ -193,15 +183,16 @@ def run_logreg_ablation_single(
     categorical_features,
     random_state: int = 42,
 ) -> pd.DataFrame:
+    print("\n[run_logreg_ablation_single] Running single-feature ablation study...")
     all_features = numeric_features + categorical_features
 
     base_auc = compute_logreg_auc(
         X, y, numeric_features, categorical_features, random_state=random_state
     )
+    print(f"[run_logreg_ablation_single] Baseline AUC with all features: {base_auc:.4f}")
 
     rows = []
-
-    for feat in all_features:
+    for i, feat in enumerate(all_features, start=1):
         if feat in numeric_features:
             num_reduced = [f for f in numeric_features if f != feat]
             cat_reduced = categorical_features
@@ -213,6 +204,8 @@ def run_logreg_ablation_single(
             X, y, num_reduced, cat_reduced, random_state=random_state
         )
         delta = base_auc - auc_reduced
+        print(f"[run_logreg_ablation_single] AUC without '{feat}': {auc_reduced:.4f} (Δ={delta:.4f})")
+
         rows.append(
             {
                 "feature_removed": feat,
@@ -223,7 +216,10 @@ def run_logreg_ablation_single(
         )
 
     ablation_df = pd.DataFrame(rows).sort_values("delta_auc", ascending=False)
-    ablation_df.to_csv("../data/ablation_single_logreg.csv", index=False)
+    csv_path = "../data/ablation_single_logreg.csv"
+    plot_path = "../plots/ablation_single_logreg.png"
+    ablation_df.to_csv(csv_path, index=False)
+    print(f"[run_logreg_ablation_single] Saved single-feature ablation results to {csv_path}")
 
     plt.figure()
     plt.bar(ablation_df["feature_removed"], ablation_df["delta_auc"])
@@ -231,9 +227,9 @@ def run_logreg_ablation_single(
     plt.ylabel("Change in AUC")
     plt.title("LogReg Single-Feature Ablation")
     plt.tight_layout()
-    plt.savefig("../plots/ablation_single_logreg.png")
+    plt.savefig(plot_path)
     plt.close()
-
+    print(f"[run_logreg_ablation_single] Saved ablation bar plot to {plot_path}")
     return ablation_df
 
 
@@ -244,11 +240,13 @@ def run_logreg_ablation_groups(
     categorical_features,
     random_state: int = 42,
 ) -> pd.DataFrame:
+    print("\n[run_logreg_ablation_groups] Running grouped-feature ablation study...")
     all_features = numeric_features + categorical_features
 
     base_auc = compute_logreg_auc(
         X, y, numeric_features, categorical_features, random_state=random_state
     )
+    print(f"[run_logreg_ablation_groups] Baseline AUC with all features: {base_auc:.4f}")
 
     groups = {
         "no_distance": ["kick_distance"],
@@ -259,19 +257,20 @@ def run_logreg_ablation_groups(
     }
 
     rows = []
-
-    for group_name, removed_feats in groups.items():
+    for i, (group_name, removed_feats) in enumerate(groups.items(), start=1):
         remaining = [f for f in all_features if f not in removed_feats]
         num_reduced = [f for f in remaining if f in numeric_features]
         cat_reduced = [f for f in remaining if f in categorical_features]
 
         if len(num_reduced) + len(cat_reduced) == 0:
+            print(f"[run_logreg_ablation_groups] Skipping group '{group_name}' (no remaining features).")
             continue
 
         auc_reduced = compute_logreg_auc(
             X, y, num_reduced, cat_reduced, random_state=random_state
         )
         delta = base_auc - auc_reduced
+        print(f"[run_logreg_ablation_groups] AUC for group '{group_name}': {auc_reduced:.4f} (Δ={delta:.4f})")
 
         rows.append(
             {
@@ -284,7 +283,10 @@ def run_logreg_ablation_groups(
         )
 
     group_df = pd.DataFrame(rows).sort_values("delta_auc", ascending=False)
-    group_df.to_csv("../data/ablation_groups_logreg.csv", index=False)
+    csv_path = "../data/ablation_groups_logreg.csv"
+    plot_path = "../plots/ablation_groups_logreg.png"
+    group_df.to_csv(csv_path, index=False)
+    print(f"[run_logreg_ablation_groups] Saved group ablation results to {csv_path}")
 
     plt.figure()
     plt.bar(group_df["group_removed"], group_df["delta_auc"])
@@ -292,9 +294,9 @@ def run_logreg_ablation_groups(
     plt.ylabel("Change in AUC")
     plt.title("LogReg Group Ablation")
     plt.tight_layout()
-    plt.savefig("../plots/ablation_groups_logreg.png")
+    plt.savefig(plot_path)
     plt.close()
-
+    print(f"[run_logreg_ablation_groups] Saved ablation bar plot to {plot_path}")
     return group_df
 
 
@@ -311,11 +313,11 @@ def run_logreg_info_criteria(
     categorical_features,
     random_state: int = 42,
 ) -> pd.DataFrame:
+    print("\n[run_logreg_info_criteria] Computing AIC/BIC for full vs distance-only logistic regression...")
 
     def fit_and_summarize(num_feats, cat_feats, model_name: str) -> dict:
         feature_list = num_feats + cat_feats
         X_sub = X[feature_list]
-
         preprocessor = build_logreg_preprocessor(num_feats, cat_feats)
         clf = make_logreg_pipeline(preprocessor)
 
@@ -330,30 +332,26 @@ def run_logreg_info_criteria(
         clf.fit(X_train, y_train)
         p_test = clf.predict_proba(X_test)[:, 1]
         auc = roc_auc_score(y_test, p_test)
-
         logL_full = compute_loglikelihood(y_test, p_test)
-
-        # p_null = np.full_like(y_test.values, fill_value=y_test.mean(), dtype=float)
-        # logL_null = compute_loglikelihood(y_test, p_null)
-
-        # mcfadden_r2 = 1.0 - (logL_full / logL_null)
 
         X_train_trans = clf.named_steps["preprocess"].transform(X_train)
         n_features_eff = X_train_trans.shape[1]
         k = n_features_eff + 1
-
         n = len(y_test)
+
         aic = 2 * k - 2 * logL_full
         bic = k * np.log(n) - 2 * logL_full
+
+        print(
+            f"[run_logreg_info_criteria] '{model_name}': "
+            f"AUC={auc:.4f}, effective_params={k}, AIC={aic:.2f}, BIC={bic:.2f}"
+        )
 
         return {
             "model": model_name,
             "num_raw_features": len(feature_list),
             "effective_params": int(k),
             "AUC": auc,
-            # "logL_full_test": logL_full,
-            # "logL_null_test": logL_null,
-            # "McFadden_R2": mcfadden_r2,
             "AIC": aic,
             "BIC": bic,
         }
@@ -373,69 +371,15 @@ def run_logreg_info_criteria(
             model_name="logreg_distance_only",
         )
     )
-
     info_df = pd.DataFrame(results)
-    info_df.to_csv("../data/logreg_info_criteria.csv", index=False)
-
+    csv_path = "../data/logreg_info_criteria.csv"
+    info_df.to_csv(csv_path, index=False)
+    print(f"[run_logreg_info_criteria] Saved info-criteria results to {csv_path}")
     return info_df
 
-
-def plot_distance_partial_dependence(
-    X: pd.DataFrame,
-    y: pd.Series,
-    numeric_features,
-    categorical_features,
-) -> pd.DataFrame:
-
-    preprocessor = build_logreg_preprocessor(numeric_features, categorical_features)
-    clf = make_logreg_pipeline(preprocessor)
-
-    clf.fit(X, y)
-
-    num_medians = X[numeric_features].median()
-    if categorical_features:
-        cat_modes = X[categorical_features].mode().iloc[0]
-    else:
-        cat_modes = pd.Series(dtype=object)
-
-    dist_min = X["kick_distance"].quantile(0.01)
-    dist_max = X["kick_distance"].quantile(0.99)
-    dist_grid = np.linspace(dist_min, dist_max, 50)
-
-    rows = []
-    for d in dist_grid:
-        row = {}
-        for col in numeric_features:
-            row[col] = float(num_medians[col])
-        for col in categorical_features:
-            row[col] = cat_modes[col]
-        row["kick_distance"] = float(d)
-        rows.append(row)
-
-    X_grid = pd.DataFrame(rows)[numeric_features + categorical_features]
-    probs = clf.predict_proba(X_grid)[:, 1]
-
-    pd_df = pd.DataFrame(
-        {
-            "kick_distance": dist_grid,
-            "pred_fg_make_prob": probs,
-        }
-    )
-    pd_df.to_csv("../data/logreg_distance_vs_success.csv", index=False)
-
-    plt.figure()
-    plt.plot(dist_grid, probs)
-    plt.xlabel("Kick distance (yards)")
-    plt.ylabel("Predicted FG make probability")
-    plt.title("Distance vs FG Success")
-    plt.tight_layout()
-    plt.savefig("../plots/logreg_distance_vs_success.png")
-    plt.close()
-
-    return pd_df
-
-
 def main():
+    print("[main] Starting supervised learning pipeline...\n")
+
     X, y, numeric_features, categorical_features = load_model_data(
         "../data/fg_data.csv"
     )
@@ -449,12 +393,13 @@ def main():
 
     N_RUNS = 10
     rng_seeds = range(42, 42 + N_RUNS)
-
     logreg_aucs = []
     gb_default_aucs = []
     gb_tuned_aucs = []
 
-    for seed in rng_seeds:
+    print(f"\n[main] Running {N_RUNS} repeated train/test splits for model comparison...")
+    for i, seed in enumerate(rng_seeds, start=1):
+        print(f"\n[main] === Run {i}/{N_RUNS} (random_state={seed}) ===")
         log_auc, gb_def_auc, gb_t_auc, *_ = run_once(
             X, y, logreg_preprocessor, tree_preprocessor, random_state=seed
         )
@@ -470,22 +415,24 @@ def main():
     std_gb_default_auc = np.std(gb_default_aucs)
     std_gb_tuned_auc = np.std(gb_tuned_aucs)
 
-    print("\nMean AUC over multiple random splits (N_RUNS = 10):")
-    print(f"  Logistic Regression:       {mean_logreg_auc:.4f} ± {std_logreg_auc:.4f}")
-    print(f"  Default Gradient Boosted:  {mean_gb_default_auc:.4f} ± {std_gb_default_auc:.4f}")
-    print(f"  Tuned Gradient Boosted:    {mean_gb_tuned_auc:.4f} ± {std_gb_tuned_auc:.4f}")
+    print("\n[main] Summary of AUC over multiple random splits (N_RUNS = 10):")
+    print(f"  Logistic Regression      : {mean_logreg_auc:.4f} ± {std_logreg_auc:.4f}")
+    print(f"  Default Gradient Boosted : {mean_gb_default_auc:.4f} ± {std_gb_default_auc:.4f}")
+    print(f"  Tuned Gradient Boosted   : {mean_gb_tuned_auc:.4f} ± {std_gb_tuned_auc:.4f}")
 
     single_df = run_logreg_ablation_single(X, y, numeric_features, categorical_features)
-    print("\nSingle-feature ablation (LogReg):")
+    print("\n[main] Single-feature ablation (LogReg):")
     print(single_df)
 
     group_df = run_logreg_ablation_groups(X, y, numeric_features, categorical_features)
-    print("\nGroup ablation (LogReg):")
+    print("\n[main] Group ablation (LogReg):")
     print(group_df)
 
     info_df = run_logreg_info_criteria(X, y, numeric_features, categorical_features)
-    print("\nModel statistics (test split):")
+    print("\n[main] Model statistics (test split):")
     print(info_df)
+
+    print("\n[main] Supervised learning analysis complete.")
 
 
 if __name__ == "__main__":
