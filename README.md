@@ -405,3 +405,7 @@ To make the project cohesive and well-motivated:
    - Data outputs under `data/`.
    - Plots under `plots/`.
    - Unused or stale files pruned to keep the repo focused.
+
+## 7. Video Links
+- [Demo](https://duke.box.com/s/d3pfrl1irgocrr1014uh0k8qyj7gyol5)
+- [Technical Walkthrough](https://duke.box.com/s/ubii0xkiz326uk20aio7p08gsxxnj993)
